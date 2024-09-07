@@ -13,8 +13,7 @@ public class Aula {
     private int idAula;
     private int numero;
 
-    @OneToOne
-    @JoinColumn(name = "fkCurso")
+    @OneToOne(mappedBy = "aula")
     private Curso curso;
 
 }

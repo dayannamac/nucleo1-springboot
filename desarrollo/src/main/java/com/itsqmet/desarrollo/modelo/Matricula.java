@@ -8,19 +8,19 @@ import java.time.LocalDate;
 @Data
 @Entity
 
-public class Matriculas {
+public class Matricula {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idMatriculas;
-    private String nombre;
+    private int idMatricula;
+
     private LocalDate fecha;
 
-    @ManyToOne //Establecemos relacion Muchos a uno
+    @ManyToOne // Muchos estudiantes pueden estar en varias matriculas
     @JoinColumn(name="fkEstudiante") //le damos nombre a la llave foranea
     private Estudiante estudiante;
 
-    @ManyToOne
+    @ManyToOne // Un curso puede tener muchos estudiantes matriculados
     @JoinColumn(name="fkCurso")
     private Curso curso;
 

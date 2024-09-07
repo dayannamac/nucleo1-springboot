@@ -1,12 +1,10 @@
 package com.itsqmet.desarrollo.modelo;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Entity
@@ -21,4 +19,6 @@ public class Docente implements Serializable {
     private String correo;
     private String especialidad;
 
+    @OneToMany(mappedBy = "docente")  // Un docente puede impartir varios cursos
+    private List<Curso> cursos;
 }

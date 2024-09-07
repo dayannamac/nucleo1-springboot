@@ -13,8 +13,12 @@ public class Curso {
     private int idCurso;
     private String nombre;
 
-    @ManyToOne
+    @ManyToOne // Muchos cursos pueden ser impartidos por un docente
     @JoinColumn(name = "fkDocente")
     private Docente docente;
+
+    @OneToOne  // Un curso está en una sola aula
+    @JoinColumn(name = "fkAula")
+    private Aula aula;
 
 }
