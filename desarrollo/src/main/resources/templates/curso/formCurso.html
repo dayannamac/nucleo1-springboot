@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Registrar Cursos</title>
+    <!-- Font Awesome icons (free version)-->
+    <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" crossorigin="anonymous"></script>
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700" rel="stylesheet" type="text/css" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link  href="/static/css/styles.css" rel="stylesheet">
+</head>
+<body id="page-top">
+
+<!-- Masthead-->
+<header class="masthead">
+
+    <h1>Formulario de Registro Cursos</h1>
+
+    <div class="container">
+
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="/curso">Lista Cursos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/curso/registrar">Añadir Curso</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/">Inicio</a>
+            </li>
+        </ul>
+
+        <!--formulario-->
+        <div class="container mt-3">
+
+            <form th:action="@{/curso/registrar}" method="post" th:object="${curso}">
+                <!--ID-->
+                <div class="mb-3 mt-3">
+                    <label>ID:</label>
+                    <input type="number" class="form-control"
+                           th:field="*{idCurso}" readonly="readonly">
+                </div>
+                <!--NOMBRE-->
+                <div class="mb-3 mt-3">
+                    <label>Nombre:</label>
+                    <input type="text" class="form-control" placeholder="Ingrese el nombre"
+                           th:field="*{nombre}">
+                </div>
+                <!--HORARIO-->
+                <div class="mb-3 mt-3">
+                    <label>Horario:</label>
+                    <select class="form-select" th:field="*{horario}">
+                        <option value="1" selected>Seleccione el horario</option>
+                        <option value="Matutino">Matutino</option>
+                        <option value="Vespertino">Vespertino</option>
+                        <option value="Intensivo">Intensivo</option>
+                    </select>
+                </div>
+                <!--DOCENTE-->
+                <div class="mb-3 mt-3">
+                    <label>Docente:</label>
+                    <select class="form-select" th:field="*{docente.idDocente}">
+                        <option value="0" th:text="${curso.docente.idDocente}" selected>Seleccione el docente</option>
+                        <option th:each="docente : ${docentes}"
+                                th:value="${docente.idDocente}"
+                                th:text="${docente.nombre} + ' ' + ${docente.apellido}">
+                        </option>
+                    </select>
+                </div>
+                <!--AULA-->
+                <div class="mb-3 mt-3">
+                    <label>Aula:</label>
+                    <select class="form-select" th:field="*{aula.idAula}">
+                        <option value="0" th:text="${curso.aula.idAula}" selected>Seleccione el aula</option>
+                        <option th:each="aula : ${aulas}"
+                                th:value="${aula.idAula}"
+                                th:text="${aula.numero}">
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-xl text-uppercase">Registrar</button>
+            </form>
+        </div>
+
+    </div>
+</header>
+
+<!-- Footer-->
+<footer class="footer py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-4 text-lg-start">Copyright &copy; Desarrollo 2024</div>
+            <div class="col-lg-4 text-lg-start">Diseñado por Dayanna Macay</div>
+            <div class="col-lg-4 my-3 my-lg-0">
+                <a class="btn btn-dark btn-social mx-5" href="#"><i class="fab fa-twitter"></i></a>
+                <a class="btn btn-dark btn-social mx-5" href="#"><i class="fab fa-facebook-f"></i></a>
+                <a class="btn btn-dark btn-social mx-5" href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+</body>
+</html>

@@ -3,63 +3,69 @@ package com.itsqmet.desarrollo.controlador;
 import com.itsqmet.desarrollo.modelo.Estudiante;
 import com.itsqmet.desarrollo.servicios.impl.EstudianteServicioImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@RestController
+@Controller
 @RequestMapping("/estudiante")
 public class EstudianteControlador {
 
     @Autowired
     EstudianteServicioImpl estudianteServicioImpl;
 
-    @PostMapping //agregar datos en la entidad
-    public ResponseEntity<Estudiante> saveEstudiante(@RequestBody Estudiante estudiante){
+    //LISTAR ESTUDIANTES
+    @GetMapping()
+    public String getAllEstudiantes(Model model) {
+        List<Estudiante> estudiantes = estudianteServicioImpl.getEstudiantes();
+        model.addAttribute("estudiantes", estudiantes);
+        return "estudiante/listaEstudiante";
+    }
+
+    //AÑADIR ESTUDIANTE
+    @GetMapping("/registrar")
+    public String saveEstudiante(Model model) {
+        model.addAttribute("estudiante", new Estudiante());
+        return "estudiante/formEstudiante";
+    }
+
+    @PostMapping("/registrar")
+    public String saveEstudiante(@ModelAttribute Estudiante estudiante, Model model) {
         try {
             Estudiante savedEstudiante = estudianteServicioImpl.saveEstudiante(estudiante);
-            return new ResponseEntity<>(savedEstudiante, HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @PutMapping //editar datos de la entidad
-    public ResponseEntity<Estudiante> updateEstudiante(@RequestBody Estudiante estudiante){
-        try {
-            Estudiante updatedEstudiante = estudianteServicioImpl.updateEstudiante(estudiante);
-            return new ResponseEntity<>(updatedEstudiante, HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            model.addAttribute("estudiante", savedEstudiante);
+            return "redirect:/estudiante";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al guardar el estudiante: " + e.getMessage());
+            return "/estudiante/registrar";
         }
     }
 
-    @GetMapping //traer la lista de los datos registrados en la entidad
-    public ResponseEntity<List<Estudiante>> getAllEstudiantes(){
-        return new ResponseEntity<>(estudianteServicioImpl.getEstudiantes(), HttpStatus.OK);
-    }
-
-    @GetMapping("/{idEstudiante}") //buscar datos en la entidad por id
-    public ResponseEntity<Estudiante> getEstudianteById(@PathVariable int idEstudiante){
+    //EDITAR ESTUDIANTE
+    @GetMapping("/editar/{idEstudiante}")
+    public String updateEstudiante(@PathVariable int idEstudiante, Model model) {
         Optional<Estudiante> estudiante = estudianteServicioImpl.getEstudianteById(idEstudiante);
-        return estudiante.map(value->new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(()->
-                new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @DeleteMapping("/{idEstudiante}") //eliminar datos en la entidad por id
-    public ResponseEntity<Void> deleteEstudiante(@PathVariable int idEstudiante){
-        Optional<Estudiante> estudiante = estudianteServicioImpl.getEstudianteById(idEstudiante);
-        if (estudiante.isPresent()){
-           estudianteServicioImpl.deleteEstudiante(estudiante.get().getIdEstudiante());
-           return new ResponseEntity<>(HttpStatus.OK);
+        if (estudiante.isPresent()) {
+            model.addAttribute("estudiante", estudiante.get());
+            return "estudiante/formEstudiante";
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return "redirect:/estudiante";
         }
+    }
+
+    //ELIMINAR ESTUDIANTE
+    @GetMapping("/eliminar/{idEstudiante}")
+    public String deleteEstudiante(@PathVariable int idEstudiante, Model model) {
+        Optional<Estudiante> estudiante = estudianteServicioImpl.getEstudianteById(idEstudiante);
+        if (estudiante.isPresent()) {
+            estudianteServicioImpl.deleteEstudiante(idEstudiante);
+        } else {
+            model.addAttribute("error", "Estudiante no encontrado.");
+        }
+        return "redirect:/estudiante";
     }
 
 }

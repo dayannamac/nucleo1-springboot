@@ -1,65 +1,100 @@
 package com.itsqmet.desarrollo.controlador;
 
-import com.itsqmet.desarrollo.modelo.Matricula;
+import com.itsqmet.desarrollo.modelo.*;
+import com.itsqmet.desarrollo.servicios.impl.CursoServicioImpl;
+import com.itsqmet.desarrollo.servicios.impl.EstudianteServicioImpl;
 import com.itsqmet.desarrollo.servicios.impl.MatriculaServicioImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@RestController
+@Controller
 @RequestMapping("/matricula")
 public class MatriculaControlador {
 
     @Autowired
     MatriculaServicioImpl matriculaServicioImpl;
 
-    @PostMapping
-    public ResponseEntity<Matricula> saveMatriculaa (@RequestBody Matricula matricula){
-        try {
+    @Autowired
+    EstudianteServicioImpl estudianteServicioImpl;
+
+    @Autowired
+    CursoServicioImpl cursoServicioImpl;
+
+    //LISTAR MATRICULAS
+    @GetMapping()
+    public String getAllMatriculas(Model model){
+        List<Matricula> matriculas = matriculaServicioImpl.getMatriculas();
+        model.addAttribute("matriculas", matriculas);
+        return "matricula/listaMatricula";
+    }
+
+    //AÑADIR MATRICULAS EN RELACION CON ESTUDIANTE Y CURSO
+    @GetMapping("/registrar")
+    public String saveMatricula(Model model){
+        model.addAttribute("matricula", new Matricula());
+        List<Estudiante> estudiantes = estudianteServicioImpl.getEstudiantes();
+        model.addAttribute("estudiantes", estudiantes);
+        List<Curso> cursos = cursoServicioImpl.getCursos();
+        model.addAttribute("cursos", cursos);
+        return "matricula/formMatricula";
+    }
+
+    @PostMapping("/registrar")
+    public String saveMatricula(@ModelAttribute Matricula matricula, Model model){
+        try{
             Matricula savedMatricula = matriculaServicioImpl.saveMatricula(matricula);
-            return new ResponseEntity<>(savedMatricula, HttpStatus.OK);
+            model.addAttribute("matricula", savedMatricula);
+            return "redirect:/matricula";
         }
         catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            model.addAttribute("error", "Error al guardar la matricula"+ e.getMessage());
+            return "/matricula/registrar";
         }
     }
 
-    @PutMapping
-    public ResponseEntity<Matricula> updateMatricula(@RequestBody Matricula matricula){
-        try {
-            Matricula updatedMatricula = matriculaServicioImpl.updateMatricula(matricula);
-            return new ResponseEntity<>(updatedMatricula, HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Matricula>> getAllMatriculas(){
-        return new ResponseEntity<>(matriculaServicioImpl.getMatriculas(), HttpStatus.OK);
-    }
-
-    @GetMapping("/{idMatricula}")
-    public ResponseEntity<Matricula> getMatriculaById(@PathVariable int idMatricula){
+    //EDITAR MATRICULA
+    @GetMapping("/editar/{idMatricula}")
+    public String updateMatricula(@PathVariable int idMatricula, Model model){
         Optional<Matricula> matricula = matriculaServicioImpl.getMatriculaById(idMatricula);
-        return matricula.map(value-> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(()->
-                new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @DeleteMapping("/{idMatricula}")
-    public ResponseEntity<Void> deleteMatricula(@PathVariable int idMatricula){
-        Optional<Matricula> matricula = matriculaServicioImpl.getMatriculaById(idMatricula);
-        if(matricula.isPresent()){
-            matriculaServicioImpl.deleteMatricula(matricula.get().getIdMatricula());
-            return new ResponseEntity<>(HttpStatus.OK);
+        if (matricula.isPresent()){
+            model.addAttribute("matricula", matricula.get());
+            // Se llama la lista de estudiantes y cursos registradas
+            List<Estudiante> estudiantes = estudianteServicioImpl.getEstudiantes();
+            model.addAttribute("estudiantes", estudiantes);
+            List<Curso> cursos = cursoServicioImpl.getCursos();
+            model.addAttribute("cursos", cursos);
+            return "matricula/formMatricula";
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return "redirect:/matricula";
         }
+    }
+
+    @PostMapping("/editar")
+    public String updateMatricula(@ModelAttribute Matricula matricula, Model model) {
+        try {
+            matriculaServicioImpl.updateMatricula(matricula);
+            return "redirect:/matricula";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al actualizar la matricula: " + e.getMessage());
+            return "matricula/formMatricula";
+        }
+    }
+
+    //ELIMINAR CURSO
+    @GetMapping("/eliminar/{idMatricula}")
+    public String deleteMatricula(@PathVariable int idMatricula, Model model){
+        Optional<Matricula> matricula = matriculaServicioImpl.getMatriculaById(idMatricula);
+        if (matricula.isPresent()){
+            matriculaServicioImpl.deleteMatricula(idMatricula);
+        } else {
+            model.addAttribute("error", "Matricula no encontrada");
+        }
+        return "redirect:/matricula";
     }
 
 }

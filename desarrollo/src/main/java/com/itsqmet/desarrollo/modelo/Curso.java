@@ -12,6 +12,7 @@ public class Curso {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idCurso;
     private String nombre;
+    private String horario;
 
     @ManyToOne // Muchos cursos pueden ser impartidos por un docente
     @JoinColumn(name = "fkDocente")

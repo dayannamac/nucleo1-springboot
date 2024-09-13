@@ -1,65 +1,102 @@
 package com.itsqmet.desarrollo.controlador;
 
+import com.itsqmet.desarrollo.modelo.Aula;
 import com.itsqmet.desarrollo.modelo.Curso;
+import com.itsqmet.desarrollo.modelo.Docente;
+import com.itsqmet.desarrollo.servicios.impl.AulaServicioImpl;
 import com.itsqmet.desarrollo.servicios.impl.CursoServicioImpl;
+import com.itsqmet.desarrollo.servicios.impl.DocenteServicioImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@RestController
+@Controller
 @RequestMapping("/curso")
 public class CursoControlador {
 
     @Autowired
     CursoServicioImpl cursoServicioImpl;
 
-    @PostMapping
-    public ResponseEntity<Curso> saveCurso(@RequestBody Curso curso){
+    @Autowired
+    DocenteServicioImpl docenteServicioImpl;
+
+    @Autowired
+    AulaServicioImpl aulaServicioImpl;
+
+    //LISTAR CURSOS
+    @GetMapping()
+    public String getAllCursos(Model model){
+        List<Curso> cursos = cursoServicioImpl.getCursos();
+        model.addAttribute("cursos", cursos);
+        return "curso/listaCurso";
+    }
+
+    //AÑADIR CURSOS EN RELACION CON DOCENTE Y #AULA
+    @GetMapping("/registrar")
+    public String saveCurso(Model model){
+        model.addAttribute("curso", new Curso());
+        List<Docente> docentes = docenteServicioImpl.getDocentes();
+        model.addAttribute("docentes", docentes);
+        List<Aula> aulas = aulaServicioImpl.getAulas();
+        model.addAttribute("aulas", aulas);
+        return "curso/formCurso";
+    }
+
+    @PostMapping("/registrar")
+    public String saveCurso(@ModelAttribute Curso curso, Model model){
         try {
             Curso savedCurso = cursoServicioImpl.saveCurso(curso);
-            return new ResponseEntity<>(savedCurso, HttpStatus.OK);
+            model.addAttribute("curso", savedCurso);
+            return "redirect:/curso";
         }
         catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            model.addAttribute("error", "Error al guardar el curso"+ e.getMessage());
+            return "/curso/registrar";
         }
     }
 
-    @PutMapping
-    public ResponseEntity<Curso> updateCurso(@RequestBody Curso curso){
-        try {
-            Curso updatedCurso = cursoServicioImpl.updateCurso(curso);
-            return new ResponseEntity<>(updatedCurso, HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Curso>>getAllCursos(){
-        return new ResponseEntity<>(cursoServicioImpl.getCursos(), HttpStatus.OK);
-    }
-
-    @GetMapping("/{idCurso}")
-    public ResponseEntity<Curso>getCursoById(@PathVariable int idCurso){
-        Optional<Curso> curso = cursoServicioImpl.getCursoById(idCurso);
-        return curso.map(value-> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(()->
-                new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @DeleteMapping("/{idCurso}")
-    public ResponseEntity<Void>deleteCurso(@PathVariable int idCurso){
+    //EDITAR CURSO
+    @GetMapping("/editar/{idCurso}")
+    public String updateCurso(@PathVariable int idCurso, Model model){
         Optional<Curso> curso = cursoServicioImpl.getCursoById(idCurso);
         if (curso.isPresent()){
-            cursoServicioImpl.deleteCurso(curso.get().getIdCurso());
-            return new ResponseEntity<>(HttpStatus.OK);
+            model.addAttribute("curso", curso.get());
+            // Se llama la lista de docentes y aulas registradas
+            List<Docente> docentes = docenteServicioImpl.getDocentes();
+            model.addAttribute("docentes", docentes);
+            List<Aula> aulas = aulaServicioImpl.getAulas();
+            model.addAttribute("aulas", aulas);
+            return "curso/formCurso";
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return "redirect:/curso";
         }
+    }
+
+    @PostMapping("/editar")
+    public String updateCurso(@ModelAttribute Curso curso, Model model) {
+        try {
+            cursoServicioImpl.updateCurso(curso);
+            return "redirect:/curso";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al actualizar el curso: " + e.getMessage());
+            return "curso/formCurso";
+        }
+    }
+
+    //ELIMINAR CURSO
+    @GetMapping("/eliminar/{idCurso}")
+    public String deleteCurso(@PathVariable int idCurso, Model model){
+        Optional<Curso> curso = cursoServicioImpl.getCursoById(idCurso);
+        if (curso.isPresent()){
+            cursoServicioImpl.deleteCurso(idCurso);
+        } else {
+            model.addAttribute("error", "Curso no encontrado");
+        }
+        return "redirect:/curso";
     }
 
 }

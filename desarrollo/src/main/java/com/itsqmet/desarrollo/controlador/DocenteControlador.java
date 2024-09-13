@@ -3,63 +3,69 @@ package com.itsqmet.desarrollo.controlador;
 import com.itsqmet.desarrollo.modelo.Docente;
 import com.itsqmet.desarrollo.servicios.impl.DocenteServicioImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@RestController
+@Controller
 @RequestMapping("/docente")
 public class DocenteControlador {
 
     @Autowired
     DocenteServicioImpl docenteServicioImpl;
 
-    @PostMapping
-    public ResponseEntity<Docente>saveDocente(@RequestBody Docente docente){
+    //LISTAR DOCENTES
+    @GetMapping()
+    public String getAllDocentes(Model model) {
+        List<Docente> docentes = docenteServicioImpl.getDocentes();
+        model.addAttribute("docentes", docentes);
+        return "docente/listaDocente";
+    }
+
+    //AÑADIR ESTUDIANTE
+    @GetMapping("/registrar")
+    public String saveDocente(Model model) {
+        model.addAttribute("docente", new Docente());
+        return "docente/formDocente";
+    }
+
+    @PostMapping("/registrar")
+    public String saveDocente(@ModelAttribute Docente docente, Model model) {
         try {
             Docente savedDocente = docenteServicioImpl.saveDocente(docente);
-            return new ResponseEntity<>(savedDocente, HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @PutMapping
-    public ResponseEntity<Docente>updateDocente(@RequestBody Docente docente){
-        try {
-            Docente updatedDocente = docenteServicioImpl.updateDocente(docente);
-            return new ResponseEntity<>(updatedDocente, HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            model.addAttribute("docente", savedDocente);
+            return "redirect:/docente";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al guardar el docente: " + e.getMessage());
+            return "/docente/registrar";
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Docente>>getAllDocentes(){
-        return new ResponseEntity<>(docenteServicioImpl.getDocentes(), HttpStatus.OK);
-    }
-
-    @GetMapping("/{idDocente}")
-    public ResponseEntity<Docente>getDocenteById(@PathVariable int idDocente){
+    //EDITAR DOCENTE
+    @GetMapping("/editar/{idDocente}")
+    public String updateDocente(@PathVariable int idDocente, Model model) {
         Optional<Docente> docente = docenteServicioImpl.getDocenteById(idDocente);
-        return docente.map(value -> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(()->
-                new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @DeleteMapping("/{idDocente}")
-    public ResponseEntity<Void>deleteDocente(@PathVariable int idDocente){
-        Optional<Docente> docente = docenteServicioImpl.getDocenteById(idDocente);
-        if(docente.isPresent()){
-            docenteServicioImpl.deleteDocente(docente.get().getIdDocente());
-            return new ResponseEntity<>(HttpStatus.OK);
+        if (docente.isPresent()) {
+            model.addAttribute("docente", docente.get());
+            return "docente/formDocente";
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return "redirect:/docente";
         }
+    }
+
+    //ELIMINAR DOCENTE
+    @GetMapping("/eliminar/{idDocente}")
+    public String deleteDocente(@PathVariable int idDocente, Model model) {
+        Optional<Docente> docente = docenteServicioImpl.getDocenteById(idDocente);
+        if (docente.isPresent()) {
+            docenteServicioImpl.deleteDocente(idDocente);
+        } else {
+            model.addAttribute("error", "Docente no encontrado.");
+        }
+        return "redirect:/docente";
     }
 
 }
